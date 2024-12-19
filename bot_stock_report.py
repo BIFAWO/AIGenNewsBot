@@ -4,8 +4,9 @@ from telegram import Bot
 from dotenv import load_dotenv
 from oauth2client.service_account import ServiceAccountCredentials
 
-# Load biến môi trường từ file .env
-load_dotenv()
+TELEGRAM_TOKEN=7679871351:AAHWmsq-PrvpFRByFtsCU4bMunM0gFEHH7E
+CHAT_ID=YOUR_CHAT_ID
+SHEET_URL=https://docs.google.com/spreadsheets/d/11IS8ynBC4D5pk2OmDtBNmGcobpuWWI-BWwjrwpfldFk/edit#gid=0
 
 # ====== CẤU HÌNH ======
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
