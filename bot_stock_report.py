@@ -1,50 +1,39 @@
-import os
-import gspread
+import requests
 from telegram import Bot
-from dotenv import load_dotenv
-from oauth2client.service_account import ServiceAccountCredentials
 
-TELEGRAM_TOKEN=7679871351:AAHWmsq-PrvpFRByFtsCU4bMunM0gFEHH7E
-CHAT_ID=YOUR_CHAT_ID
-SHEET_URL=https://docs.google.com/spreadsheets/d/11IS8ynBC4D5pk2OmDtBNmGcobpuWWI-BWwjrwpfldFk/edit#gid=0
+# ===== CẤU HÌNH =====
+TELEGRAM_TOKEN = "7679871351:AAHWmsq-PrvpFRByFtsCU4bMunM0gFEHH7E"
+CHAT_ID = "YOUR_CHAT_ID"  # Thay bằng Chat ID thực tế của bạn
+SHEET_ID = "11IS8ynBC4D5pk2OmDtBNmGcobpuWWI-BWwjrwpfldFk"
+SHEET_NAME = "Dashboard"  # Tên sheet chính
 
-# ====== CẤU HÌNH ======
-TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
-CHAT_ID = os.getenv("CHAT_ID")
-SHEET_URL = os.getenv("SHEET_URL")
-GOOGLE_CREDENTIALS_FILE = "credentials.json"  # Đường dẫn file JSON (thêm vào dự án)
+# ===== LẤY DỮ LIỆU TỪ GOOGLE SHEETS =====
+def get_sheet_data(sheet_id, sheet_name):
+    url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={sheet_name}"
+    response = requests.get(url)
+    response.raise_for_status()  # Báo lỗi nếu request thất bại
+    data = response.text
+    rows = [row.split(",") for row in data.split("\n") if row]
+    return rows
 
-# ====== KẾT NỐI GOOGLE SHEETS ======
-scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_name(GOOGLE_CREDENTIALS_FILE, scope)
-client = gspread.authorize(creds)
+# Đọc dữ liệu từ Google Sheets
+data = get_sheet_data(SHEET_ID, SHEET_NAME)
 
-# Mở Google Sheets
-sheet = client.open_by_url(SHEET_URL)
-worksheet = sheet.get_worksheet(0)  # Lấy sheet đầu tiên
-
-# ====== ĐỌC DỮ LIỆU ======
-data = worksheet.get_all_values()  # Đọc toàn bộ dữ liệu
-headers = data[0]  # Dòng tiêu đề
-rows = data[1:]  # Các dòng dữ liệu
-
-# ====== TẠO NỘI DUNG BẢN TIN ======
-def create_report(rows):
-    report = "📊 *Báo cáo thị trường chứng khoán*\n\n"
-    vn_index_row = rows[4]  # Hàng VNIndex (thay bằng hàng tương ứng)
-    report += f"- VN-Index đóng cửa: {vn_index_row[1]} điểm\n"
-    report += f"- Tăng/Giảm trong phiên: {vn_index_row[5]} điểm\n"
-    report += f"- Tổng giá trị giao dịch: {vn_index_row[11]} tỷ VNĐ\n\n"
+# ===== TẠO NỘI DUNG BẢN TIN =====
+def create_report(data):
+    vn_index_row = data[5]  # Lấy dòng VNIndex (thay đổi theo cấu trúc bảng của bạn)
+    report = f"📊 *Thị trường chứng khoán hôm nay*\n\n"
+    report += f"VN-Index: {vn_index_row[1]} điểm, thay đổi: {vn_index_row[5]} điểm\n"
+    report += f"Tổng giá trị giao dịch: {vn_index_row[11]} tỷ VNĐ\n\n"
     
     # Top cổ phiếu nổi bật
-    report += "🌟 *Các cổ phiếu nổi bật hôm nay:*\n"
-    for row in rows[:3]:  # Lấy Top 3 cổ phiếu
-        report += f"  - {row[0]}: {row[5]} điểm, khối lượng: {row[10]} cổ phiếu\n"
-    
+    report += "🌟 *Cổ phiếu nổi bật:*\n"
+    for row in data[:3]:  # Lấy top 3 cổ phiếu (thay đổi nếu cần)
+        report += f"- {row[0]}: {row[5]} điểm, khối lượng: {row[10]} cổ phiếu\n"
     return report
 
-report = create_report(rows)
+report = create_report(data)
 
-# ====== GỬI TIN NHẮN QUA TELEGRAM ======
+# ===== GỬI TIN NHẮN QUA TELEGRAM =====
 bot = Bot(token=TELEGRAM_TOKEN)
 bot.send_message(chat_id=CHAT_ID, text=report, parse_mode="Markdown")
