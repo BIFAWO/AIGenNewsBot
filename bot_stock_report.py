@@ -1,6 +1,6 @@
-from telegram import Update, Bot
-from telegram.ext import Updater, CommandHandler, CallbackContext
 import requests
+from telegram import Update, Bot
+from telegram.ext import Application, CommandHandler, ContextTypes
 
 # ===== CẤU HÌNH =====
 TELEGRAM_TOKEN = "7679871351:AAHWmsq-PrvpFRByFtsCU4bMunM0gFEHH7E"
@@ -30,22 +30,21 @@ def create_report(data):
     return report
 
 # ===== XỬ LÝ LỆNH /START =====
-def start(update: Update, context: CallbackContext):
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = get_sheet_data(SHEET_ID, SHEET_NAME)
     report = create_report(data)
-    update.message.reply_text(report, parse_mode="Markdown")
+    await update.message.reply_text(report, parse_mode="Markdown")
 
 # ===== CHẠY BOT =====
 def main():
-    updater = Updater(TELEGRAM_TOKEN)
-    dispatcher = updater.dispatcher
+    # Tạo ứng dụng Telegram Bot
+    application = Application.builder().token(TELEGRAM_TOKEN).build()
 
-    # Thêm CommandHandler cho lệnh /start
-    dispatcher.add_handler(CommandHandler("start", start))
+    # Thêm handler cho lệnh /start
+    application.add_handler(CommandHandler("start", start))
 
     # Chạy bot
-    updater.start_polling()
-    updater.idle()
+    application.run_polling()
 
 if __name__ == "__main__":
     main()
