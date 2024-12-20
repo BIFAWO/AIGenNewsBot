@@ -3,7 +3,7 @@ from telegram import Bot
 
 # ===== CẤU HÌNH =====
 TELEGRAM_TOKEN = "7679871351:AAHWmsq-PrvpFRByFtsCU4bMunM0gFEHH7E"
-CHAT_ID = "YOUR_CHAT_ID"  # Thay bằng Chat ID thực tế của bạn
+CHAT_ID = "YOUR_CHAT_ID"  # Thay bằng Chat ID của bạn
 SHEET_ID = "11IS8ynBC4D5pk2OmDtBNmGcobpuWWI-BWwjrwpfldFk"
 SHEET_NAME = "Dashboard"  # Tên sheet chính
 
