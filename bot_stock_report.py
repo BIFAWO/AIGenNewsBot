@@ -1,11 +1,11 @@
+from telegram import Update, Bot
+from telegram.ext import Updater, CommandHandler, CallbackContext
 import requests
-from telegram import Bot
 
 # ===== CẤU HÌNH =====
 TELEGRAM_TOKEN = "7679871351:AAHWmsq-PrvpFRByFtsCU4bMunM0gFEHH7E"
-CHAT_ID = "YOUR_CHAT_ID"  # Thay bằng Chat ID của bạn
 SHEET_ID = "11IS8ynBC4D5pk2OmDtBNmGcobpuWWI-BWwjrwpfldFk"
-SHEET_NAME = "Dashboard"  # Tên sheet chính
+SHEET_NAME = "Dashboard"
 
 # ===== LẤY DỮ LIỆU TỪ GOOGLE SHEETS =====
 def get_sheet_data(sheet_id, sheet_name):
@@ -15,9 +15,6 @@ def get_sheet_data(sheet_id, sheet_name):
     data = response.text
     rows = [row.split(",") for row in data.split("\n") if row]
     return rows
-
-# Đọc dữ liệu từ Google Sheets
-data = get_sheet_data(SHEET_ID, SHEET_NAME)
 
 # ===== TẠO NỘI DUNG BẢN TIN =====
 def create_report(data):
@@ -32,8 +29,23 @@ def create_report(data):
         report += f"- {row[0]}: {row[5]} điểm, khối lượng: {row[10]} cổ phiếu\n"
     return report
 
-report = create_report(data)
+# ===== XỬ LÝ LỆNH /START =====
+def start(update: Update, context: CallbackContext):
+    data = get_sheet_data(SHEET_ID, SHEET_NAME)
+    report = create_report(data)
+    update.message.reply_text(report, parse_mode="Markdown")
 
-# ===== GỬI TIN NHẮN QUA TELEGRAM =====
-bot = Bot(token=TELEGRAM_TOKEN)
-bot.send_message(chat_id=CHAT_ID, text=report, parse_mode="Markdown")
+# ===== CHẠY BOT =====
+def main():
+    updater = Updater(TELEGRAM_TOKEN)
+    dispatcher = updater.dispatcher
+
+    # Thêm CommandHandler cho lệnh /start
+    dispatcher.add_handler(CommandHandler("start", start))
+
+    # Chạy bot
+    updater.start_polling()
+    updater.idle()
+
+if __name__ == "__main__":
+    main()
